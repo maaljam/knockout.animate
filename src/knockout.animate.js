@@ -18,10 +18,10 @@
         }
     }
 
-    function removePrefixedEvent(element, type) {
+    function removePrefixedEvent(element, type, callback) {
         for (var p = 0; p < pfx.length; p++) {
             if (!pfx[p]) type = type.toLowerCase();
-            element.removeEventListener(pfx[p]+type);
+            element.removeEventListener(pfx[p]+type, callback);
         }
     }
 
@@ -46,8 +46,10 @@
         addClass(element, baseAnimateClass);
         addClass(element, animation);
 
-        addPrefixedEvent(element, "AnimationEnd", function(event){
-            removePrefixedEvent(element, "AnimationEnd");
+        var eventSubscription = null;
+
+        eventSubscription = function(event){
+            removePrefixedEvent(element, "AnimationEnd", eventSubscription);
 
             removeClass(element, baseAnimateClass);
             removeClass(element, animation);
@@ -55,7 +57,9 @@
             if (typeof callback === 'function'){
                 callback(event, state);
             }
-        });
+        };
+
+        addPrefixedEvent(element, "AnimationEnd", eventSubscription);
     }
 
     ko.bindingHandlers.animate = {
@@ -63,11 +67,13 @@
             var data = ko.unwrap(valueAccessor()),
                 animation, state, toggle, animationOn, animationOff, handler;
 
-            if (!data.animation){
+                console.log(data.state);
+
+            if (data.animation == undefined){
                 throw new Error('Animation property must be defined');
             }
 
-            if (!data.state){
+            if (data.state == undefined){
                 throw new Error('State property must be defined');
             }
 
@@ -76,22 +82,24 @@
             animationOff = typeof animation === 'object' ? animation[1] : animation;
 
             if (animationOn && animations.indexOf(animationOn) === -1){
-                throw new Error('Invalid first animation');
+                // this is to not limit animate.css animations
+                //throw new Error('Invalid first animation');
             }
 
             if (animationOff && animations.indexOf(animationOff) === -1){
-                throw new Error('Invalid second animation');
+                // this is to not limit animate.css animations
+                //throw new Error('Invalid second animation');
             }
         },
         update: function(element, valueAccessor){
             var data = ko.unwrap(valueAccessor()),
                 animation, state, toggle, animationOn, animationOff, handler;
 
-            if (!data.animation){
+            if (data.animation == undefined){
                 throw new Error('Animation property must be defined');
             }
 
-            if (!data.state){
+            if (data.state == undefined){
                 throw new Error('State property must be defined');
             }
 
